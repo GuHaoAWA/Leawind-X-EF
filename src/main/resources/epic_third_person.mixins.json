@@ -1,0 +1,22 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.guhao.epic_third_person.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "plugin": "com.guhao.epic_third_person.mixinloader.CompatMixinPlugin",
+  "mixins": [
+
+  ],
+  "client": [
+    "betterlockon.BetterLockOnEpicFightCameraAPIMixin",
+    "betterlockon.BetterLockOnThirdPersonPerspectiveMixin",
+    "epicfight.SkillContainerMixin",
+    "leawind.MinecraftInputIntegrationMixin",
+    "leawind.MinecraftClientIntegrationMixin",
+    "leawind.ThirdPersonPerspectiveMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "epic_third_person.mixin-refmap.json"
+}
