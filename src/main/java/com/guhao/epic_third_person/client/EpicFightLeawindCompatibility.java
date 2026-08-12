@@ -1,6 +1,7 @@
 package com.guhao.epic_third_person.client;
 
 import com.guhao.epic_third_person.EpicThirdPerson;
+import com.guhao.epic_third_person.config.EpicThirdPersonClientConfig;
 import io.github.leawind.perspectiveapi.api.PerspectiveAPI;
 import io.github.leawind.perspectiveapi.api.PerspectiveMath;
 import io.github.leawind.thirdperson.internal.logic.base.BaseRuntime;
@@ -103,6 +104,10 @@ public final class EpicFightLeawindCompatibility {
     }
 
     public static void applyPlayerFacing(LocalPlayer player, boolean synchronize) {
+        if (shouldUseLeawindEightDirectionMovement(player)) {
+            return;
+        }
+
         TargetRotation rotation = resolveTargetRotation();
         if (rotation == null || player != Minecraft.getInstance().player) {
             return;
@@ -131,7 +136,7 @@ public final class EpicFightLeawindCompatibility {
     }
 
     public static boolean deferPlayerFacingToBetterLockOn(LocalPlayer player) {
-        if (!isBetterLockOnActive(player)) {
+        if (!isBetterLockOnActive(player) || shouldUseLeawindEightDirectionMovement(player)) {
             return false;
         }
 
@@ -140,11 +145,16 @@ public final class EpicFightLeawindCompatibility {
     }
 
     public static boolean deferMovementToBetterLockOn(LocalPlayer player) {
-        return isBetterLockOnActive(player);
+        return isBetterLockOnActive(player) && !shouldUseLeawindEightDirectionMovement(player);
     }
 
     public static boolean shouldReleaseBetterLockOnTargetImmediately() {
         return isLeawindPerspectiveActive();
+    }
+
+    public static boolean shouldSuppressLeawindInteractionRotation() {
+        Minecraft minecraft = Minecraft.getInstance();
+        return minecraft.options.keyUse.isDown() && resolveTargetRotation() != null;
     }
 
     public static CameraRotation captureCameraBeforeBetterLockOn() {
@@ -257,6 +267,13 @@ public final class EpicFightLeawindCompatibility {
                 && target != null
                 && target.isAlive()
                 && !target.isRemoved();
+    }
+
+    public static boolean shouldUseLeawindEightDirectionMovement(LocalPlayer player) {
+        return EpicThirdPersonClientConfig.useLeawindEightDirectionMovementWhileLocked()
+                && player != null
+                && player == Minecraft.getInstance().player
+                && resolveTargetRotation() != null;
     }
 
     private static boolean isBetterLockOnLoaded() {

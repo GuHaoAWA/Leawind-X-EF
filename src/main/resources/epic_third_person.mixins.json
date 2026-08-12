@@ -9,10 +9,13 @@
   ],
   "client": [
     "betterlockon.BetterLockOnEpicFightCameraAPIMixin",
+    "betterlockon.BetterLockOnLockOnControlMixin",
+    "betterlockon.BetterLockOnLocalPlayerMixin",
     "betterlockon.BetterLockOnThirdPersonPerspectiveMixin",
     "epicfight.SkillContainerMixin",
     "leawind.MinecraftInputIntegrationMixin",
     "leawind.MinecraftClientIntegrationMixin",
+    "leawind.MinecraftSchedulingIntegrationMixin",
     "leawind.ThirdPersonPerspectiveMixin"
   ],
   "injectors": {

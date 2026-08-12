@@ -3,6 +3,8 @@ package com.guhao.epic_third_person.mixin.betterlockon;
 import com.bawnorton.mixinsquared.TargetHandler;
 import com.guhao.epic_third_person.client.EpicFightLeawindCompatibility;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -18,10 +20,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import yesman.epicfight.api.client.camera.EpicFightCameraAPI;
 import yesman.epicfight.api.client.event.EpicFightClientHooks;
 import yesman.epicfight.api.client.event.types.LockOnEvent;
+import yesman.epicfight.api.client.input.action.EpicFightInputAction;
+import yesman.epicfight.api.client.input.action.InputAction;
+import yesman.epicfight.api.client.input.InputManager;
 import yesman.epicfight.network.EpicFightNetworkManager;
 import yesman.epicfight.network.client.CPSetPlayerTarget;
 
-@SuppressWarnings("InvalidMemberReference")
+@SuppressWarnings({"InvalidMemberReference", "UnresolvedMixinReference"})
 @Mixin(value = EpicFightCameraAPI.class, priority = 1_500, remap = false)
 public abstract class BetterLockOnEpicFightCameraAPIMixin {
     @Shadow
@@ -149,5 +154,93 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
         return EpicFightLeawindCompatibility.shouldReleaseBetterLockOnTargetImmediately()
                 ? 1
                 : originalDelay;
+    }
+
+    @TargetHandler(
+            mixin = "net.shelmarow.betterlockon.mixins.EpicFightCameraAPIMixin",
+            name = "rewroteClientTick",
+            prefix = "handler"
+    )
+    @WrapOperation(
+            method = "@MixinSquared:Handler",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lyesman/epicfight/api/client/input/InputManager;isActionActive(Lyesman/epicfight/api/client/input/action/InputAction;)Z"
+            ),
+            require = 1,
+            remap = false
+    )
+    private boolean epicThirdPerson$keepSprintForEightDirectionMovement(
+            InputAction action,
+            Operation<Boolean> original
+    ) {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (action == EpicFightInputAction.LOCK_ON_SHIFT_FREELY
+                && EpicFightLeawindCompatibility.shouldUseLeawindEightDirectionMovement(player)) {
+            return false;
+        }
+
+        return original.call(action);
+    }
+
+    @TargetHandler(
+            mixin = "net.shelmarow.betterlockon.mixins.EpicFightCameraAPIMixin",
+            name = "rewroteClientTick",
+            prefix = "handler"
+    )
+    @ModifyExpressionValue(
+            method = "@MixinSquared:Handler",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lyesman/epicfight/api/client/camera/EpicFightCameraAPI;blo$getOffset()F"
+            ),
+            require = 1,
+            remap = false
+    )
+    private float epicThirdPerson$removeSprintMovementOffset(float originalOffset) {
+        LocalPlayer player = Minecraft.getInstance().player;
+        return EpicFightLeawindCompatibility.shouldUseLeawindEightDirectionMovement(player)
+                ? 0.0F
+                : originalOffset;
+    }
+
+    @TargetHandler(
+            mixin = "net.shelmarow.betterlockon.mixins.EpicFightCameraAPIMixin",
+            name = "rewroteClientTick",
+            prefix = "handler"
+    )
+    @Redirect(
+            method = "@MixinSquared:Handler",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/player/LocalPlayer;setXRot(F)V"
+            ),
+            require = 1,
+            remap = false
+    )
+    private void epicThirdPerson$preserveEightDirectionPitch(LocalPlayer player, float pitch) {
+        if (!EpicFightLeawindCompatibility.shouldUseLeawindEightDirectionMovement(player)) {
+            player.setXRot(pitch);
+        }
+    }
+
+    @TargetHandler(
+            mixin = "net.shelmarow.betterlockon.mixins.EpicFightCameraAPIMixin",
+            name = "rewroteClientTick",
+            prefix = "handler"
+    )
+    @Redirect(
+            method = "@MixinSquared:Handler",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/player/LocalPlayer;setYRot(F)V"
+            ),
+            require = 1,
+            remap = false
+    )
+    private void epicThirdPerson$preserveEightDirectionYaw(LocalPlayer player, float yaw) {
+        if (!EpicFightLeawindCompatibility.shouldUseLeawindEightDirectionMovement(player)) {
+            player.setYRot(yaw);
+        }
     }
 }

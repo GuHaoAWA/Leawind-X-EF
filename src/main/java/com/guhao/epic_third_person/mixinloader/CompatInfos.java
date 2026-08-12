@@ -28,7 +28,9 @@ public class CompatInfos {
         BETTER_LOCK_ON = new CompatMod(
                 "betterlockon",
                 "BetterLockOnThirdPersonPerspectiveMixin",
-                "BetterLockOnEpicFightCameraAPIMixin"
+                "BetterLockOnEpicFightCameraAPIMixin",
+                "BetterLockOnLocalPlayerMixin",
+                "BetterLockOnLockOnControlMixin"
         );
     }
 
