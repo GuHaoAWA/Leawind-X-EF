@@ -18,6 +18,7 @@ import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import yesman.epicfight.api.client.camera.EpicFightCameraAPI;
 import yesman.epicfight.api.client.event.EpicFightClientHooks;
+import yesman.epicfight.api.client.event.types.ActivateTPSCamera;
 import yesman.epicfight.api.client.event.types.BuildCameraTransform;
 import yesman.epicfight.api.client.input.InputManager;
 import yesman.epicfight.api.client.input.action.EpicFightInputAction;
@@ -49,6 +50,19 @@ public final class EpicFightLeawindCompatibility {
                 MODIFIER_ID + "/camera-transform",
                 EVENT_PRIORITY
         );
+        EpicFightClientHooks.Camera.ACTIVATE_TPS_CAMERA.registerEvent(
+                EpicFightLeawindCompatibility::preventEpicFightTpsCamera,
+                MODIFIER_ID + "/tps-camera",
+                EVENT_PRIORITY
+        );
+    }
+
+    private static void preventEpicFightTpsCamera(ActivateTPSCamera event) {
+        if (!isBetterLockOnLoaded()
+                && isLeawindPerspectiveActive()
+                && event.getCameraApi().isLockingOnTarget()) {
+            event.cancel();
+        }
     }
 
     private static void preventEpicFightCameraTransform(BuildCameraTransform.Pre event) {

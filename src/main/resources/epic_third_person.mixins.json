@@ -12,6 +12,7 @@
     "betterlockon.BetterLockOnLockOnControlMixin",
     "betterlockon.BetterLockOnLocalPlayerMixin",
     "betterlockon.BetterLockOnThirdPersonPerspectiveMixin",
+    "epicfight.EpicFightCameraAPIMixin",
     "epicfight.SkillContainerMixin",
     "leawind.MinecraftInputIntegrationMixin",
     "leawind.MinecraftClientIntegrationMixin",
