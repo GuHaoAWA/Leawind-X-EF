@@ -89,7 +89,7 @@ reobf {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    implementation fg.deobf("curse.maven:epic-fight-mod-405076:8049910")
+    implementation fg.deobf("curse.maven:epic-fight-mod-405076:${epic_fight_file_id}")
     implementation fg.deobf("curse.maven:embeddium-908741:5556138")
     implementation fg.deobf("curse.maven:oculus-581495:5299671")
     implementation fg.deobf("curse.maven:leawind-third-person-930880:8602826")
@@ -97,7 +97,7 @@ dependencies {
 //    implementation fg.deobf("curse.maven:architectury-api-419699:5137938")
     implementation fg.deobf("curse.maven:perspective-api-1575322:8595558")
 
-    implementation fg.deobf("curse.maven:better-lock-on-1339577:8143195")
+    implementation fg.deobf("curse.maven:better-lock-on-1339577:${better_lock_on_file_id}")
 
     compileOnly(annotationProcessor("com.bawnorton.mixinsquared:mixinsquared-common:0.2.0-beta.6"))
     implementation(jarJar("com.bawnorton.mixinsquared:mixinsquared-forge:0.2.0-beta.6")) {

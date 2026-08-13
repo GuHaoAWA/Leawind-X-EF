@@ -2,14 +2,19 @@ package com.guhao.epic_third_person.client;
 
 import com.guhao.epic_third_person.EpicThirdPerson;
 import com.guhao.epic_third_person.config.EpicThirdPersonClientConfig;
+import com.mojang.blaze3d.platform.InputConstants;
 import io.github.leawind.perspectiveapi.api.PerspectiveAPI;
 import io.github.leawind.perspectiveapi.api.PerspectiveMath;
 import io.github.leawind.thirdperson.internal.logic.base.BaseRuntime;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ShieldItem;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -22,8 +27,13 @@ import yesman.epicfight.api.client.event.types.ActivateTPSCamera;
 import yesman.epicfight.api.client.event.types.BuildCameraTransform;
 import yesman.epicfight.api.client.input.InputManager;
 import yesman.epicfight.api.client.input.action.EpicFightInputAction;
+import yesman.epicfight.api.client.input.action.MinecraftInputAction;
+import yesman.epicfight.skill.SkillContainer;
+import yesman.epicfight.skill.SkillSlots;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.client.world.capabilites.entitypatch.player.LocalPlayerPatch;
+
+import java.util.Arrays;
 
 @OnlyIn(Dist.CLIENT)
 public final class EpicFightLeawindCompatibility {
@@ -34,6 +44,11 @@ public final class EpicFightLeawindCompatibility {
     private static final long CAMERA_RETURN_DURATION_NANOS = 350_000_000L;
 
     private static boolean initialized;
+    private static boolean loggedGuardCameraDelegation;
+    private static boolean loggedTpsCameraDelegation;
+    private static boolean loggedGuardInteractionSuppression;
+    private static boolean loggedNativeLockReleaseCleanup;
+    private static boolean loggedRangedSprintPriority;
     private static CameraReturnAnimation cameraReturnAnimation;
 
     private EpicFightLeawindCompatibility() {
@@ -45,6 +60,7 @@ public final class EpicFightLeawindCompatibility {
         }
 
         initialized = true;
+        EpicThirdPerson.LOGGER.info("Loaded Epic Fight camera compatibility");
         EpicFightClientHooks.Camera.BUILD_TRANSFORM_PRE.registerEvent(
                 EpicFightLeawindCompatibility::preventEpicFightCameraTransform,
                 MODIFIER_ID + "/camera-transform",
@@ -58,15 +74,24 @@ public final class EpicFightLeawindCompatibility {
     }
 
     private static void preventEpicFightTpsCamera(ActivateTPSCamera event) {
-        if (!isBetterLockOnLoaded()
-                && isLeawindPerspectiveActive()
-                && event.getCameraApi().isLockingOnTarget()) {
+        if (isLeawindPerspectiveActive()
+                && (isEpicFightGuardUsingVanillaUseKey(Minecraft.getInstance().player)
+                || !isBetterLockOnLoaded() && event.getCameraApi().isLockingOnTarget())) {
             event.cancel();
         }
     }
 
     private static void preventEpicFightCameraTransform(BuildCameraTransform.Pre event) {
-        if (isLeawindPerspectiveActive() && event.getCameraApi().isLockingOnTarget()) {
+        if (!isLeawindPerspectiveActive()) {
+            return;
+        }
+
+        EpicFightCameraAPI cameraApi = event.getCameraApi();
+        boolean leawindOwnsTpsCamera = EpicThirdPersonClientConfig.useLeawindCameraInEpicFightTps()
+                && cameraApi.isTPSMode();
+        if (leawindOwnsTpsCamera
+                || cameraApi.isLockingOnTarget()
+                || isEpicFightGuardUsingVanillaUseKey(Minecraft.getInstance().player)) {
             event.cancel();
         }
     }
@@ -163,12 +188,205 @@ public final class EpicFightLeawindCompatibility {
     }
 
     public static boolean shouldReleaseBetterLockOnTargetImmediately() {
+        return shouldReleaseEpicFightTargetImmediately();
+    }
+
+    public static boolean shouldReleaseEpicFightTargetImmediately() {
         return isLeawindPerspectiveActive();
     }
 
     public static boolean shouldSuppressLeawindInteractionRotation() {
         Minecraft minecraft = Minecraft.getInstance();
-        return minecraft.options.keyUse.isDown() && resolveTargetRotation() != null;
+        if (!isLeawindPerspectiveActive()) {
+            return false;
+        }
+
+        boolean suppress = isEpicFightGuardUsingVanillaUseKey(minecraft.player)
+                || minecraft.options.keyUse.isDown() && resolveTargetRotation() != null;
+        if (suppress && !loggedGuardInteractionSuppression) {
+            loggedGuardInteractionSuppression = true;
+            EpicThirdPerson.LOGGER.info(
+                    "Suppressed Leawind interaction rotation while Epic Fight owns the guard input"
+            );
+        }
+        return suppress;
+    }
+
+    public static boolean shouldPrioritizeRangedSprintInput(InputConstants.Key inputKey) {
+        Minecraft minecraft = Minecraft.getInstance();
+        LocalPlayer player = minecraft.player;
+        return minecraft.options.keySprint.getKey().equals(inputKey)
+                && shouldPrioritizeRangedSprintInput(minecraft, player);
+    }
+
+    public static boolean shouldSuppressRangedSprintKeyEvent(int key, int scanCode, int action) {
+        return action != 0
+                && shouldPrioritizeRangedSprintInput(InputConstants.getKey(key, scanCode));
+    }
+
+    public static boolean handleEpicFightCameraInput(
+            EpicFightCameraAPI cameraApi,
+            double yawDelta,
+            double pitchDelta
+    ) {
+        if (!isLeawindPerspectiveCurrent()
+                || hasValidLockOnTarget(cameraApi)) {
+            return false;
+        }
+
+        boolean guardCamera = isEpicFightGuardUsingVanillaUseKey(Minecraft.getInstance().player);
+        boolean tpsCamera = EpicThirdPersonClientConfig.useLeawindCameraInEpicFightTps()
+                && cameraApi.isTPSMode();
+        if (!guardCamera && !tpsCamera) {
+            return false;
+        }
+
+        var runtime = BaseRuntime.getInstance();
+        if (!runtime.session().isPerspectiveActive()) {
+            runtime.onPerspectiveActivated();
+        }
+
+        var lookController = runtime.session().lookController();
+        if (!lookController.isInitialized()) {
+            CameraRotation rotation = resolveDisplayedCameraRotation();
+            if (rotation == null) {
+                rotation = resolveEpicFightCameraRotation(cameraApi);
+            }
+            if (rotation != null) {
+                lookController.initialize(rotation.pitch(), rotation.yaw());
+            }
+        }
+
+        cameraReturnAnimation = null;
+        if (!lookController.turn(yawDelta, pitchDelta)) {
+            return false;
+        }
+
+        if (tpsCamera && !loggedTpsCameraDelegation) {
+            loggedTpsCameraDelegation = true;
+            EpicThirdPerson.LOGGER.info(
+                    "Delegated Epic Fight TPS camera input to Leawind Third Person"
+            );
+        }
+
+        cameraApi.setCameraRotations(
+                lookController.pitchDegrees(),
+                lookController.yawDegrees(),
+                true
+        );
+        if (guardCamera && !loggedGuardCameraDelegation) {
+            loggedGuardCameraDelegation = true;
+            EpicThirdPerson.LOGGER.info(
+                    "Applied Epic Fight guard camera input directly to Leawind Third Person"
+            );
+        }
+        return true;
+    }
+
+    private static boolean isEpicFightGuardUsingVanillaUseKey(LocalPlayer player) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (player == null
+                || !InputManager.isBoundToSamePhysicalInput(
+                EpicFightInputAction.GUARD,
+                MinecraftInputAction.USE
+        )
+                || !minecraft.options.keyUse.isDown()
+                && !InputManager.isActionActive(EpicFightInputAction.GUARD)) {
+            return false;
+        }
+
+        if (isChargeableRangedItem(player.getUseItem())
+                || isChargeableRangedItem(player.getMainHandItem())
+                || isChargeableRangedItem(player.getOffhandItem())) {
+            return false;
+        }
+
+        LocalPlayerPatch playerPatch = EpicFightCapabilities.getLocalPlayerPatch(player);
+        if (playerPatch == null || !playerPatch.isEpicFightMode()) {
+            return false;
+        }
+
+        if (player.getMainHandItem().getItem() instanceof ShieldItem
+                || player.getOffhandItem().getItem() instanceof ShieldItem) {
+            return false;
+        }
+
+        SkillContainer guard = playerPatch.getSkill(SkillSlots.GUARD);
+        if (guard == null || guard.isEmpty()) {
+            return false;
+        }
+
+        boolean holdingGuard = guard.isActivated() || playerPatch.isHoldingSkill(guard.getSkill());
+        return holdingGuard || !playerPatch.isHoldingAny() && guard.getSkill().canExecute(guard);
+    }
+
+    private static boolean shouldPrioritizeRangedSprintInput(Minecraft minecraft, LocalPlayer player) {
+        if (player == null
+                || minecraft.screen != null
+                || !isLeawindPerspectiveActive()
+                || !player.isUsingItem()
+                || !isChargeableRangedItem(player.getUseItem())
+                || !hasPhysicalBindingConflict(minecraft.options.keySprint)) {
+            return false;
+        }
+
+        LocalPlayerPatch playerPatch = EpicFightCapabilities.getLocalPlayerPatch(player);
+        if (playerPatch == null || !playerPatch.isEpicFightMode()) {
+            return false;
+        }
+
+        if (!loggedRangedSprintPriority) {
+            loggedRangedSprintPriority = true;
+            EpicThirdPerson.LOGGER.info(
+                    "Prioritized bow and crossbow charging over conflicting sprint-key combat actions"
+            );
+        }
+        return true;
+    }
+
+    private static boolean hasPhysicalBindingConflict(KeyMapping prioritizedMapping) {
+        return Arrays.stream(Minecraft.getInstance().options.keyMappings)
+                .anyMatch(keyMapping -> keyMapping != prioritizedMapping
+                        && keyMapping.getKey().equals(prioritizedMapping.getKey()));
+    }
+
+    private static boolean isChargeableRangedItem(ItemStack itemStack) {
+        UseAnim useAnimation = itemStack.getUseAnimation();
+        return useAnimation == UseAnim.BOW || useAnimation == UseAnim.CROSSBOW;
+    }
+
+    public static void synchronizeAfterNativeLockRelease(EpicFightCameraAPI cameraApi) {
+        if (!shouldReleaseEpicFightTargetImmediately()) {
+            return;
+        }
+
+        var session = BaseRuntime.getInstance().session();
+        var lookController = session.lookController();
+        CameraRotation releasedRotation = resolveDisplayedCameraRotation();
+        if (releasedRotation == null) {
+            releasedRotation = resolveEpicFightCameraRotation(cameraApi);
+        }
+        if (releasedRotation != null) {
+            lookController.initialize(releasedRotation.pitch(), releasedRotation.yaw());
+        }
+
+        cameraReturnAnimation = null;
+        session.playerRotationController().reset();
+        session.clearMovementIntent();
+        if (lookController.isInitialized()) {
+            cameraApi.setCameraRotations(
+                    lookController.pitchDegrees(),
+                    lookController.yawDegrees(),
+                    true
+            );
+        }
+
+        if (!loggedNativeLockReleaseCleanup) {
+            loggedNativeLockReleaseCleanup = true;
+            EpicThirdPerson.LOGGER.info(
+                    "Cleared Epic Fight native lock target immediately after release"
+            );
+        }
     }
 
     public static CameraRotation captureCameraBeforeBetterLockOn() {
@@ -259,8 +477,11 @@ public final class EpicFightLeawindCompatibility {
             return null;
         }
 
+        return resolveEpicFightCameraRotation(EpicFightCameraAPI.getInstance());
+    }
+
+    private static CameraRotation resolveEpicFightCameraRotation(EpicFightCameraAPI cameraApi) {
         Minecraft minecraft = Minecraft.getInstance();
-        EpicFightCameraAPI cameraApi = EpicFightCameraAPI.getInstance();
         float partialTick = minecraft.getFrameTime();
         float pitch = Mth.rotLerp(partialTick, cameraApi.getCameraXRotO(), cameraApi.getCameraXRot());
         float yaw = Mth.rotLerp(partialTick, cameraApi.getCameraYRotO(), cameraApi.getCameraYRot());
@@ -275,9 +496,12 @@ public final class EpicFightLeawindCompatibility {
         }
 
         EpicFightCameraAPI cameraApi = EpicFightCameraAPI.getInstance();
+        return isLeawindPerspectiveActive() && hasValidLockOnTarget(cameraApi);
+    }
+
+    private static boolean hasValidLockOnTarget(EpicFightCameraAPI cameraApi) {
         LivingEntity target = cameraApi.getFocusingEntity();
-        return isLeawindPerspectiveActive()
-                && cameraApi.isLockingOnTarget()
+        return cameraApi.isLockingOnTarget()
                 && target != null
                 && target.isAlive()
                 && !target.isRemoved();
@@ -288,6 +512,14 @@ public final class EpicFightLeawindCompatibility {
                 && player != null
                 && player == Minecraft.getInstance().player
                 && resolveTargetRotation() != null;
+    }
+
+    public static boolean shouldUseLeawindMovementInEpicFightTps(LocalPlayer player) {
+        return EpicThirdPersonClientConfig.useLeawindCameraInEpicFightTps()
+                && player != null
+                && player == Minecraft.getInstance().player
+                && isLeawindPerspectiveActive()
+                && BaseRuntime.getInstance().session().movementIntent().isPresent();
     }
 
     private static boolean isBetterLockOnLoaded() {
@@ -320,7 +552,12 @@ public final class EpicFightLeawindCompatibility {
     }
 
     private static boolean isLeawindPerspectiveActive() {
-        return PerspectiveAPI.isCurrent(LEAWIND_PERSPECTIVE_ID);
+        return isLeawindPerspectiveCurrent();
+    }
+
+    private static boolean isLeawindPerspectiveCurrent() {
+        return PerspectiveAPI.isEnabled()
+                && PerspectiveAPI.isCurrent(LEAWIND_PERSPECTIVE_ID);
     }
 
     private record TargetRotation(float yaw, float pitch) {

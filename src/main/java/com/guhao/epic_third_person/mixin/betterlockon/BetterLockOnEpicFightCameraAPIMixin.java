@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import yesman.epicfight.api.client.camera.EpicFightCameraAPI;
 import yesman.epicfight.api.client.event.EpicFightClientHooks;
 import yesman.epicfight.api.client.event.types.LockOnEvent;
@@ -29,6 +30,9 @@ import yesman.epicfight.network.client.CPSetPlayerTarget;
 @SuppressWarnings({"InvalidMemberReference", "UnresolvedMixinReference"})
 @Mixin(value = EpicFightCameraAPI.class, priority = 1_500, remap = false)
 public abstract class BetterLockOnEpicFightCameraAPIMixin {
+    @Unique
+    private static final int EPIC_THIRD_PERSON$MAX_TRANSITION_FLUSH_TICKS = 256;
+
     @Shadow
     private LivingEntity focusingEntity;
 
@@ -73,8 +77,12 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
         this.lockingOnTarget = false;
         this.focusingEntity = null;
         BLOCameraSetting.reset();
-        for (int tick = 0; tick < 30 && !BLOCameraSetting.transitionFinished(); tick++) {
+        for (int tick = 0; tick < EPIC_THIRD_PERSON$MAX_TRANSITION_FLUSH_TICKS; tick++) {
+            int previousTransitionTick = BLOCameraSetting.getTransitionTick();
             BLOCameraSetting.tick();
+            if (BLOCameraSetting.getTransitionTick() <= previousTransitionTick) {
+                break;
+            }
         }
 
         EpicFightLeawindCompatibility.CameraRotation returnRotation =
@@ -112,6 +120,36 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
 
     @TargetHandler(
             mixin = "net.shelmarow.betterlockon.mixins.EpicFightCameraAPIMixin",
+            name = "onTurnCamera",
+            prefix = "handler"
+    )
+    @Inject(
+            method = "@MixinSquared:Handler",
+            at = @At("HEAD"),
+            cancellable = true,
+            require = 0,
+            remap = false
+    )
+    private void epicThirdPerson$delegateBetterLockOnCameraInput(
+            double yawDelta,
+            double pitchDelta,
+            CallbackInfoReturnable<Boolean> originalCallback,
+            CallbackInfo callbackInfo
+    ) {
+        if (!EpicFightLeawindCompatibility.handleEpicFightCameraInput(
+                (EpicFightCameraAPI) (Object) this,
+                yawDelta,
+                pitchDelta
+        )) {
+            return;
+        }
+
+        originalCallback.setReturnValue(true);
+        callbackInfo.cancel();
+    }
+
+    @TargetHandler(
+            mixin = "net.shelmarow.betterlockon.mixins.EpicFightCameraAPIMixin",
             name = "rewroteClientTick",
             prefix = "handler"
     )
@@ -122,7 +160,7 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
                     target = "Lyesman/epicfight/api/client/camera/EpicFightCameraAPI;focusingEntity:Lnet/minecraft/world/entity/LivingEntity;",
                     opcode = Opcodes.PUTFIELD
             ),
-            require = 1,
+            require = 0,
             remap = false
     )
     private void epicThirdPerson$preventSoftTargetReacquire(
@@ -147,7 +185,7 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
                     target = "Lyesman/epicfight/api/client/camera/EpicFightCameraAPI;blo$maxUnlockDelayTick:I",
                     opcode = Opcodes.GETFIELD
             ),
-            require = 2,
+            require = 0,
             remap = false
     )
     private int epicThirdPerson$removeOcclusionUnlockDelay(int originalDelay) {
@@ -167,7 +205,7 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
                     value = "INVOKE",
                     target = "Lyesman/epicfight/api/client/input/InputManager;isActionActive(Lyesman/epicfight/api/client/input/action/InputAction;)Z"
             ),
-            require = 1,
+            require = 0,
             remap = false
     )
     private boolean epicThirdPerson$keepSprintForEightDirectionMovement(
@@ -194,7 +232,7 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
                     value = "INVOKE",
                     target = "Lyesman/epicfight/api/client/camera/EpicFightCameraAPI;blo$getOffset()F"
             ),
-            require = 1,
+            require = 0,
             remap = false
     )
     private float epicThirdPerson$removeSprintMovementOffset(float originalOffset) {
@@ -213,9 +251,10 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
             method = "@MixinSquared:Handler",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/player/LocalPlayer;setXRot(F)V"
+                    target = "Lnet/minecraft/client/player/LocalPlayer;setXRot(F)V",
+                    remap = true
             ),
-            require = 1,
+            require = 0,
             remap = false
     )
     private void epicThirdPerson$preserveEightDirectionPitch(LocalPlayer player, float pitch) {
@@ -233,9 +272,10 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
             method = "@MixinSquared:Handler",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/player/LocalPlayer;setYRot(F)V"
+                    target = "Lnet/minecraft/client/player/LocalPlayer;setYRot(F)V",
+                    remap = true
             ),
-            require = 1,
+            require = 0,
             remap = false
     )
     private void epicThirdPerson$preserveEightDirectionYaw(LocalPlayer player, float yaw) {
