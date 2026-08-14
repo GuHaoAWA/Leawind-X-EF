@@ -112,6 +112,27 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
 
     @TargetHandler(
             mixin = "net.shelmarow.betterlockon.mixins.EpicFightCameraAPIMixin",
+            name = "getForwardYRot",
+            prefix = "handler"
+    )
+    @Redirect(
+            method = "@MixinSquared:Handler",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/shelmarow/betterlockon/compat/HandlerLeawindCompat;handlerDodgeRotation(F)F"
+            ),
+            require = 0,
+            remap = false
+    )
+    private float epicThirdPerson$replaceLegacyLeawindDodgeRotation(float cameraYRot) {
+        return EpicFightLeawindCompatibility.resolveDodgeForwardYaw(
+                (EpicFightCameraAPI) (Object) this,
+                cameraYRot
+        );
+    }
+
+    @TargetHandler(
+            mixin = "net.shelmarow.betterlockon.mixins.EpicFightCameraAPIMixin",
             name = "onTurnCamera",
             prefix = "handler"
     )

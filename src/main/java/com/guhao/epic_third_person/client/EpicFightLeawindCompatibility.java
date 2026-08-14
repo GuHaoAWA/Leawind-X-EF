@@ -145,6 +145,18 @@ public final class EpicFightLeawindCompatibility {
                 : null;
     }
 
+    public static float resolveDodgeForwardYaw(
+            EpicFightCameraAPI cameraApi,
+            float fallbackYaw
+    ) {
+        if (cameraApi.isLockingOnTarget() || !isLeawindPerspectiveActive()) {
+            return fallbackYaw;
+        }
+
+        float cameraYaw = Minecraft.getInstance().gameRenderer.getMainCamera().getYRot();
+        return Float.isFinite(cameraYaw) ? Mth.wrapDegrees(cameraYaw) : fallbackYaw;
+    }
+
     public static void applyPlayerFacing(LocalPlayer player, boolean synchronize) {
         if (shouldUseLeawindEightDirectionMovement(player)) {
             return;
