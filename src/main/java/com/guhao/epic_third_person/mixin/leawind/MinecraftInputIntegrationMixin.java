@@ -38,18 +38,18 @@ public abstract class MinecraftInputIntegrationMixin {
             ),
             remap = false
     )
-    private static Optional<MovementIntent> epicThirdPerson$useVisibleCameraForMovement(
+    private static Optional<MovementIntent> epicThirdPerson$useHardLockCameraForMovementAxes(
             float leftImpulse,
             float forwardImpulse,
             float cameraYaw,
             float cameraPitch,
             Operation<Optional<MovementIntent>> original
     ) {
-        EpicFightLeawindCompatibility.CameraRotation rotation =
-                EpicFightLeawindCompatibility.resolveDisplayedLockOnCameraRotation();
-        if (rotation != null) {
-            cameraYaw = rotation.yaw();
-            cameraPitch = rotation.pitch();
+        EpicFightLeawindCompatibility.CameraRotation lockRotation =
+                EpicFightLeawindCompatibility.resolveLockedMovementCameraRotation();
+        if (lockRotation != null) {
+            cameraYaw = lockRotation.yaw();
+            cameraPitch = lockRotation.pitch();
         }
 
         return original.call(leftImpulse, forwardImpulse, cameraYaw, cameraPitch);

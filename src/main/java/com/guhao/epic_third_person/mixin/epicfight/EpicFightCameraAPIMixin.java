@@ -1,14 +1,13 @@
 package com.guhao.epic_third_person.mixin.epicfight;
 
 import com.guhao.epic_third_person.client.EpicFightLeawindCompatibility;
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -27,21 +26,53 @@ public abstract class EpicFightCameraAPIMixin {
     @Shadow
     private boolean lockingOnTarget;
 
+    @Unique
+    private EpicFightLeawindCompatibility.CameraRotation epicThirdPerson$nativeCameraBeforeLockOn;
+
+    @Inject(method = "setLockOn", at = @At("HEAD"), remap = false)
+    private void epicThirdPerson$captureCameraBeforeNativeLockOn(
+            boolean requestedLockOn,
+            CallbackInfo callbackInfo
+    ) {
+        if (EpicFightLeawindCompatibility.shouldHandleNativeLockOnLifecycle()
+                && requestedLockOn
+                && !this.lockingOnTarget) {
+            this.epicThirdPerson$nativeCameraBeforeLockOn =
+                    EpicFightLeawindCompatibility.captureCameraBeforeLockOn();
+        }
+    }
+
     @Inject(method = "setLockOn", at = @At("RETURN"), remap = false)
     private void epicThirdPerson$clearReleasedNativeTarget(
             boolean requestedLockOn,
             CallbackInfo callbackInfo
     ) {
-        if (requestedLockOn || !EpicFightLeawindCompatibility.shouldReleaseEpicFightTargetImmediately()) {
+        if (requestedLockOn) {
+            if (EpicFightLeawindCompatibility.shouldHandleNativeLockOnLifecycle()
+                    && !this.lockingOnTarget) {
+                this.epicThirdPerson$nativeCameraBeforeLockOn = null;
+            }
+            return;
+        }
+        if (!EpicFightLeawindCompatibility.shouldHandleNativeLockOnLifecycle()
+                || !EpicFightLeawindCompatibility.shouldReleaseEpicFightTargetImmediately()) {
             return;
         }
 
-        boolean hadRetainedTarget = this.lockingOnTarget || this.focusingEntity != null;
+        boolean hadRetainedTarget = this.lockingOnTarget
+                || this.focusingEntity != null
+                || this.epicThirdPerson$nativeCameraBeforeLockOn != null;
+        if (!hadRetainedTarget) {
+            return;
+        }
+
         this.lockingOnTarget = false;
         this.focusingEntity = null;
         EpicFightLeawindCompatibility.synchronizeAfterNativeLockRelease(
-                (EpicFightCameraAPI) (Object) this
+                (EpicFightCameraAPI) (Object) this,
+                this.epicThirdPerson$nativeCameraBeforeLockOn
         );
+        this.epicThirdPerson$nativeCameraBeforeLockOn = null;
         if (hadRetainedTarget) {
             EpicFightNetworkManager.sendToServer(new CPSetPlayerTarget(-1));
         }
@@ -61,21 +92,6 @@ public abstract class EpicFightCameraAPIMixin {
         )) {
             callbackInfo.setReturnValue(true);
         }
-    }
-
-    @ModifyExpressionValue(
-            method = "getRelativeMove",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lyesman/epicfight/api/client/camera/EpicFightCameraAPI;isTPSMode()Z"
-            ),
-            require = 0,
-            remap = false
-    )
-    private boolean epicThirdPerson$usePlayerFacingForLeawindTpsMovement(boolean tpsMode) {
-        return tpsMode && !EpicFightLeawindCompatibility.shouldUseLeawindMovementInEpicFightTps(
-                Minecraft.getInstance().player
-        );
     }
 
     @Redirect(

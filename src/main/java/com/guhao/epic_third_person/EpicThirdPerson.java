@@ -1,6 +1,7 @@
 package com.guhao.epic_third_person;
 
 import com.guhao.epic_third_person.client.EpicFightLeawindCompatibility;
+import com.guhao.epic_third_person.client.EpicThirdPersonClientCommands;
 import com.guhao.epic_third_person.config.EpicThirdPersonClientConfig;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -23,6 +24,7 @@ public class EpicThirdPerson {
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             EpicFightLeawindCompatibility.initialize();
+            MinecraftForge.EVENT_BUS.addListener(EpicThirdPersonClientCommands::register);
         }
     }
 

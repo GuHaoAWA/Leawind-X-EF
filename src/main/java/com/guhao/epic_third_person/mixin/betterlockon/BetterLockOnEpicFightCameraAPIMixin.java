@@ -53,7 +53,7 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
         if (lockingOnTarget) {
             if (!this.lockingOnTarget) {
                 this.epicThirdPerson$cameraBeforeLockOn =
-                        EpicFightLeawindCompatibility.captureCameraBeforeBetterLockOn();
+                        EpicFightLeawindCompatibility.captureCameraBeforeLockOn();
             }
             return;
         }
@@ -87,16 +87,8 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
 
         EpicFightLeawindCompatibility.CameraRotation returnRotation =
                 this.epicThirdPerson$cameraBeforeLockOn;
-        if (returnRotation != null) {
-            this.setCameraRotations(returnRotation.pitch(), returnRotation.yaw(), true);
-        } else {
-            LocalPlayer player = Minecraft.getInstance().player;
-            if (player != null) {
-                this.setCameraRotations(player.getXRot(), player.getYRot(), true);
-            }
-        }
-
-        EpicFightLeawindCompatibility.restoreCameraAfterBetterLockOnRelease(
+        EpicFightLeawindCompatibility.restoreCameraAfterLockOnRelease(
+                (EpicFightCameraAPI) (Object) this,
                 returnRotation
         );
         this.epicThirdPerson$cameraBeforeLockOn = null;
@@ -111,7 +103,7 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
         if (lockingOnTarget) {
             if (this.isLockingOnTarget() && this.epicThirdPerson$cameraBeforeLockOn == null) {
                 this.epicThirdPerson$cameraBeforeLockOn =
-                        EpicFightLeawindCompatibility.captureCameraBeforeBetterLockOn();
+                        EpicFightLeawindCompatibility.captureCameraBeforeLockOn();
             } else if (!this.isLockingOnTarget()) {
                 this.epicThirdPerson$cameraBeforeLockOn = null;
             }

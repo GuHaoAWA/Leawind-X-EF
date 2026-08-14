@@ -6,7 +6,6 @@ public final class EpicThirdPersonClientConfig {
     public static final ForgeConfigSpec SPEC;
 
     private static final ForgeConfigSpec.BooleanValue USE_LEAWIND_EIGHT_DIRECTION_MOVEMENT_WHILE_LOCKED;
-    private static final ForgeConfigSpec.BooleanValue USE_LEAWIND_CAMERA_IN_EPIC_FIGHT_TPS;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -21,16 +20,6 @@ public final class EpicThirdPersonClientConfig {
                 .define("useLeawindEightDirectionMovement", true);
         builder.pop();
 
-        builder.push("tps");
-        USE_LEAWIND_CAMERA_IN_EPIC_FIGHT_TPS = builder
-                .comment(
-                        "Let Leawind Third Person own the rendered camera while Epic Fight TPS mode is active.",
-                        "true: preserve Epic Fight aiming, crosshair picking, and attack direction, but use Leawind camera and movement direction.",
-                        "false: let Epic Fight apply its native TPS camera transform."
-                )
-                .define("useLeawindCamera", true);
-        builder.pop();
-
         SPEC = builder.build();
     }
 
@@ -41,7 +30,17 @@ public final class EpicThirdPersonClientConfig {
         return USE_LEAWIND_EIGHT_DIRECTION_MOVEMENT_WHILE_LOCKED.get();
     }
 
-    public static boolean useLeawindCameraInEpicFightTps() {
-        return USE_LEAWIND_CAMERA_IN_EPIC_FIGHT_TPS.get();
+    public static boolean toggleLeawindEightDirectionMovementWhileLocked() {
+        return setLeawindEightDirectionMovementWhileLocked(
+                !useLeawindEightDirectionMovementWhileLocked()
+        );
+    }
+
+    public static boolean setLeawindEightDirectionMovementWhileLocked(boolean enabled) {
+        if (useLeawindEightDirectionMovementWhileLocked() != enabled) {
+            USE_LEAWIND_EIGHT_DIRECTION_MOVEMENT_WHILE_LOCKED.set(enabled);
+            USE_LEAWIND_EIGHT_DIRECTION_MOVEMENT_WHILE_LOCKED.save();
+        }
+        return enabled;
     }
 }
