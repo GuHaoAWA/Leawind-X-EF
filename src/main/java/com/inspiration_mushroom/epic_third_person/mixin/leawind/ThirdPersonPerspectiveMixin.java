@@ -1,6 +1,6 @@
-package com.guhao.epic_third_person.mixin.leawind;
+package com.inspiration_mushroom.epic_third_person.mixin.leawind;
 
-import com.guhao.epic_third_person.client.EpicFightLeawindCompatibility;
+import com.inspiration_mushroom.epic_third_person.client.EpicFightLeawindCompatibility;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.leawind.thirdperson.internal.logic.base.ThirdPersonPerspective;

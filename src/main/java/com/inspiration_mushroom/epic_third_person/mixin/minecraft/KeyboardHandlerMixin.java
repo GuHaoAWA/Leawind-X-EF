@@ -1,6 +1,6 @@
-package com.guhao.epic_third_person.mixin.minecraft;
+package com.inspiration_mushroom.epic_third_person.mixin.minecraft;
 
-import com.guhao.epic_third_person.client.EpicFightLeawindCompatibility;
+import com.inspiration_mushroom.epic_third_person.client.EpicFightLeawindCompatibility;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.minecraft.client.KeyboardHandler;
 import org.spongepowered.asm.mixin.Mixin;

@@ -1,4 +1,4 @@
-package com.guhao.epic_third_person.mixin.leawind;
+package com.inspiration_mushroom.epic_third_person.mixin.leawind;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.leawind.thirdperson.internal.logic.base.rotation.LookController;

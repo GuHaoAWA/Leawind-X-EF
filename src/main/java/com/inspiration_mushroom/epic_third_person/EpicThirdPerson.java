@@ -1,8 +1,8 @@
-package com.guhao.epic_third_person;
+package com.inspiration_mushroom.epic_third_person;
 
-import com.guhao.epic_third_person.client.EpicFightLeawindCompatibility;
-import com.guhao.epic_third_person.client.EpicThirdPersonClientCommands;
-import com.guhao.epic_third_person.config.EpicThirdPersonClientConfig;
+import com.inspiration_mushroom.epic_third_person.client.EpicFightLeawindCompatibility;
+import com.inspiration_mushroom.epic_third_person.client.EpicThirdPersonClientCommands;
+import com.inspiration_mushroom.epic_third_person.config.EpicThirdPersonClientConfig;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.ModLoadingContext;

@@ -1,6 +1,6 @@
-package com.guhao.epic_third_person.client;
+package com.inspiration_mushroom.epic_third_person.client;
 
-import com.guhao.epic_third_person.config.EpicThirdPersonClientConfig;
+import com.inspiration_mushroom.epic_third_person.config.EpicThirdPersonClientConfig;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;

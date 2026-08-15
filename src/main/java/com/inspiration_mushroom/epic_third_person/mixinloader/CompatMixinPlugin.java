@@ -1,4 +1,4 @@
-package com.guhao.epic_third_person.mixinloader;
+package com.inspiration_mushroom.epic_third_person.mixinloader;
 
 
 import org.objectweb.asm.tree.ClassNode;

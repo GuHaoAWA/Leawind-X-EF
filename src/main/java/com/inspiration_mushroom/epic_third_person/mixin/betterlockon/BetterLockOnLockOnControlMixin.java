@@ -1,6 +1,6 @@
-package com.guhao.epic_third_person.mixin.betterlockon;
+package com.inspiration_mushroom.epic_third_person.mixin.betterlockon;
 
-import com.guhao.epic_third_person.client.EpicFightLeawindCompatibility;
+import com.inspiration_mushroom.epic_third_person.client.EpicFightLeawindCompatibility;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraftforge.client.event.MovementInputUpdateEvent;
 import net.shelmarow.betterlockon.client.control.LockOnControl;

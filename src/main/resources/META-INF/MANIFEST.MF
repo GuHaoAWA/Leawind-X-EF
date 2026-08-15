@@ -1,1 +1,1 @@
-MixinConnector: com.guhao.epic_third_person.MixinConnector
+MixinConnector: com.inspiration_mushroom.epic_third_person.MixinConnector

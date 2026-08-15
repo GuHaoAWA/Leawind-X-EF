@@ -1,4 +1,4 @@
-package com.guhao.epic_third_person;
+package com.inspiration_mushroom.epic_third_person;
 
 import org.spongepowered.asm.mixin.Mixins;
 import org.spongepowered.asm.mixin.connect.IMixinConnector;

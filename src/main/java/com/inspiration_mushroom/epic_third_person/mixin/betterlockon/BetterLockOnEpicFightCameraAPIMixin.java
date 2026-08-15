@@ -1,7 +1,7 @@
-package com.guhao.epic_third_person.mixin.betterlockon;
+package com.inspiration_mushroom.epic_third_person.mixin.betterlockon;
 
 import com.bawnorton.mixinsquared.TargetHandler;
-import com.guhao.epic_third_person.client.EpicFightLeawindCompatibility;
+import com.inspiration_mushroom.epic_third_person.client.EpicFightLeawindCompatibility;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;

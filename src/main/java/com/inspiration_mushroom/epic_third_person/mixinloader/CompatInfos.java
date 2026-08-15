@@ -1,4 +1,4 @@
-package com.guhao.epic_third_person.mixinloader;
+package com.inspiration_mushroom.epic_third_person.mixinloader;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

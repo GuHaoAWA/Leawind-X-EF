@@ -1,6 +1,6 @@
-package com.guhao.epic_third_person.mixin.epicfight;
+package com.inspiration_mushroom.epic_third_person.mixin.epicfight;
 
-import com.guhao.epic_third_person.client.EpicFightLeawindCompatibility;
+import com.inspiration_mushroom.epic_third_person.client.EpicFightLeawindCompatibility;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;

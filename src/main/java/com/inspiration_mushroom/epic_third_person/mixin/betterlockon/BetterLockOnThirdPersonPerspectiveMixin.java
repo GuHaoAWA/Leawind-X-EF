@@ -1,4 +1,4 @@
-package com.guhao.epic_third_person.mixin.betterlockon;
+package com.inspiration_mushroom.epic_third_person.mixin.betterlockon;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;

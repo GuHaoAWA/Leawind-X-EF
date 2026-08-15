@@ -1,4 +1,4 @@
-package com.guhao.epic_third_person.config;
+package com.inspiration_mushroom.epic_third_person.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 

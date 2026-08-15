@@ -1,7 +1,7 @@
-package com.guhao.epic_third_person.client;
+package com.inspiration_mushroom.epic_third_person.client;
 
-import com.guhao.epic_third_person.EpicThirdPerson;
-import com.guhao.epic_third_person.config.EpicThirdPersonClientConfig;
+import com.inspiration_mushroom.epic_third_person.EpicThirdPerson;
+import com.inspiration_mushroom.epic_third_person.config.EpicThirdPersonClientConfig;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.github.leawind.perspectiveapi.api.PerspectiveAPI;
 import io.github.leawind.perspectiveapi.api.PerspectiveMath;

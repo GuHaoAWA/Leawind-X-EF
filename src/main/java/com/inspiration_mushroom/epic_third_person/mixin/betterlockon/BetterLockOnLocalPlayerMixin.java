@@ -1,7 +1,7 @@
-package com.guhao.epic_third_person.mixin.betterlockon;
+package com.inspiration_mushroom.epic_third_person.mixin.betterlockon;
 
 import com.bawnorton.mixinsquared.TargetHandler;
-import com.guhao.epic_third_person.client.EpicFightLeawindCompatibility;
+import com.inspiration_mushroom.epic_third_person.client.EpicFightLeawindCompatibility;
 import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
 import org.spongepowered.asm.mixin.Mixin;

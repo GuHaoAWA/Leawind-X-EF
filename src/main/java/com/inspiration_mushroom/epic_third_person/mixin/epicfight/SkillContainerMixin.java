@@ -1,6 +1,6 @@
-package com.guhao.epic_third_person.mixin.epicfight;
+package com.inspiration_mushroom.epic_third_person.mixin.epicfight;
 
-import com.guhao.epic_third_person.client.EpicFightLeawindCompatibility;
+import com.inspiration_mushroom.epic_third_person.client.EpicFightLeawindCompatibility;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.spongepowered.asm.mixin.Mixin;
