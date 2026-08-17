@@ -12,6 +12,7 @@
     "betterlockon.BetterLockOnLockOnControlMixin",
     "betterlockon.BetterLockOnLocalPlayerMixin",
     "betterlockon.BetterLockOnThirdPersonPerspectiveMixin",
+    "epicfight.AutoCameraMixin",
     "epicfight.EpicFightCameraAPIMixin",
     "epicfight.LocalPlayerPatchMixin",
     "epicfight.SkillContainerMixin",

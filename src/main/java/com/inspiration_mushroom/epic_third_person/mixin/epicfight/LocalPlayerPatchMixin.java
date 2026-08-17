@@ -1,13 +1,14 @@
 package com.inspiration_mushroom.epic_third_person.mixin.epicfight;
 
 import com.inspiration_mushroom.epic_third_person.client.EpicFightLeawindCompatibility;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import yesman.epicfight.api.animation.types.ActionAnimation;
 import yesman.epicfight.api.animation.types.AttackAnimation;
@@ -30,7 +31,7 @@ public abstract class LocalPlayerPatchMixin {
         }
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "beginAction",
             at = @At(
                     value = "INVOKE",
@@ -40,9 +41,13 @@ public abstract class LocalPlayerPatchMixin {
             require = 0,
             remap = false
     )
-    private void epicThirdPerson$preserveEightDirectionActionYaw(LocalPlayer player, float targetYaw) {
+    private void epicThirdPerson$preserveEightDirectionActionYaw(
+            LocalPlayer player,
+            float targetYaw,
+            Operation<Void> original
+    ) {
         if (!EpicFightLeawindCompatibility.shouldPreserveEightDirectionAttackActionYaw(player)) {
-            player.setYRot(targetYaw);
+            original.call(player, targetYaw);
         }
     }
 }

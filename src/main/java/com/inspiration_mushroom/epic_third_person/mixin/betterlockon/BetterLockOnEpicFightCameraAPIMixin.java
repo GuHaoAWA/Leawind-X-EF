@@ -15,7 +15,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import yesman.epicfight.api.client.camera.EpicFightCameraAPI;
@@ -115,7 +114,7 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
             name = "getForwardYRot",
             prefix = "handler"
     )
-    @Redirect(
+    @WrapOperation(
             method = "@MixinSquared:Handler",
             at = @At(
                     value = "INVOKE",
@@ -124,7 +123,10 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
             require = 0,
             remap = false
     )
-    private float epicThirdPerson$replaceLegacyLeawindDodgeRotation(float cameraYRot) {
+    private float epicThirdPerson$replaceLegacyLeawindDodgeRotation(
+            float cameraYRot,
+            Operation<Float> original
+    ) {
         return EpicFightLeawindCompatibility.resolveDodgeForwardYaw(
                 (EpicFightCameraAPI) (Object) this,
                 cameraYRot
@@ -166,7 +168,7 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
             name = "rewroteClientTick",
             prefix = "handler"
     )
-    @Redirect(
+    @WrapOperation(
             method = "@MixinSquared:Handler",
             at = @At(
                     value = "FIELD",
@@ -178,12 +180,14 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
     )
     private void epicThirdPerson$preventSoftTargetReacquire(
             EpicFightCameraAPI cameraApi,
-            LivingEntity target
+            LivingEntity target,
+            Operation<Void> original
     ) {
-        this.focusingEntity = EpicFightLeawindCompatibility.shouldReleaseBetterLockOnTargetImmediately()
+        LivingEntity effectiveTarget = EpicFightLeawindCompatibility.shouldReleaseBetterLockOnTargetImmediately()
                 && !this.isLockingOnTarget()
                 ? null
                 : target;
+        original.call(cameraApi, effectiveTarget);
     }
 
     @TargetHandler(
@@ -260,7 +264,7 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
             name = "rewroteClientTick",
             prefix = "handler"
     )
-    @Redirect(
+    @WrapOperation(
             method = "@MixinSquared:Handler",
             at = @At(
                     value = "INVOKE",
@@ -270,9 +274,13 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
             require = 0,
             remap = false
     )
-    private void epicThirdPerson$preserveEightDirectionPitch(LocalPlayer player, float pitch) {
+    private void epicThirdPerson$preserveEightDirectionPitch(
+            LocalPlayer player,
+            float pitch,
+            Operation<Void> original
+    ) {
         if (!EpicFightLeawindCompatibility.shouldUseLeawindEightDirectionMovement(player)) {
-            player.setXRot(pitch);
+            original.call(player, pitch);
         }
     }
 
@@ -281,7 +289,7 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
             name = "rewroteClientTick",
             prefix = "handler"
     )
-    @Redirect(
+    @WrapOperation(
             method = "@MixinSquared:Handler",
             at = @At(
                     value = "INVOKE",
@@ -291,9 +299,13 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
             require = 0,
             remap = false
     )
-    private void epicThirdPerson$preserveEightDirectionYaw(LocalPlayer player, float yaw) {
+    private void epicThirdPerson$preserveEightDirectionYaw(
+            LocalPlayer player,
+            float yaw,
+            Operation<Void> original
+    ) {
         if (!EpicFightLeawindCompatibility.shouldUseLeawindEightDirectionMovement(player)) {
-            player.setYRot(yaw);
+            original.call(player, yaw);
         }
     }
 }

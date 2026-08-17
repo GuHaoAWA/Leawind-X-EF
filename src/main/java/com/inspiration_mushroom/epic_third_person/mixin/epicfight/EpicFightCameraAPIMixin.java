@@ -1,6 +1,8 @@
 package com.inspiration_mushroom.epic_third_person.mixin.epicfight;
 
 import com.inspiration_mushroom.epic_third_person.client.EpicFightLeawindCompatibility;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
@@ -10,7 +12,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import yesman.epicfight.api.client.camera.EpicFightCameraAPI;
@@ -94,7 +95,7 @@ public abstract class EpicFightCameraAPIMixin {
         }
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "postClientTick",
             at = @At(
                     value = "INVOKE",
@@ -105,13 +106,17 @@ public abstract class EpicFightCameraAPIMixin {
             require = 0,
             remap = false
     )
-    private void epicThirdPerson$preserveLeawindPitch(LocalPlayer player, float pitch) {
+    private void epicThirdPerson$preserveLeawindPitch(
+            LocalPlayer player,
+            float pitch,
+            Operation<Void> original
+    ) {
         if (!EpicFightLeawindCompatibility.shouldUseLeawindEightDirectionMovement(player)) {
-            player.setXRot(pitch);
+            original.call(player, pitch);
         }
     }
 
-    @Redirect(
+    @WrapOperation(
             method = "postClientTick",
             at = @At(
                     value = "INVOKE",
@@ -122,9 +127,13 @@ public abstract class EpicFightCameraAPIMixin {
             require = 0,
             remap = false
     )
-    private void epicThirdPerson$preserveLeawindYaw(LocalPlayer player, float yaw) {
+    private void epicThirdPerson$preserveLeawindYaw(
+            LocalPlayer player,
+            float yaw,
+            Operation<Void> original
+    ) {
         if (!EpicFightLeawindCompatibility.shouldUseLeawindEightDirectionMovement(player)) {
-            player.setYRot(yaw);
+            original.call(player, yaw);
         }
     }
 }
