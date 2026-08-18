@@ -168,33 +168,6 @@ public abstract class BetterLockOnEpicFightCameraAPIMixin {
             name = "rewroteClientTick",
             prefix = "handler"
     )
-    @WrapOperation(
-            method = "@MixinSquared:Handler",
-            at = @At(
-                    value = "FIELD",
-                    target = "Lyesman/epicfight/api/client/camera/EpicFightCameraAPI;focusingEntity:Lnet/minecraft/world/entity/LivingEntity;",
-                    opcode = Opcodes.PUTFIELD
-            ),
-            require = 0,
-            remap = false
-    )
-    private void epicThirdPerson$preventSoftTargetReacquire(
-            EpicFightCameraAPI cameraApi,
-            LivingEntity target,
-            Operation<Void> original
-    ) {
-        LivingEntity effectiveTarget = EpicFightLeawindCompatibility.shouldReleaseBetterLockOnTargetImmediately()
-                && !this.isLockingOnTarget()
-                ? null
-                : target;
-        original.call(cameraApi, effectiveTarget);
-    }
-
-    @TargetHandler(
-            mixin = "net.shelmarow.betterlockon.mixins.EpicFightCameraAPIMixin",
-            name = "rewroteClientTick",
-            prefix = "handler"
-    )
     @ModifyExpressionValue(
             method = "@MixinSquared:Handler",
             at = @At(

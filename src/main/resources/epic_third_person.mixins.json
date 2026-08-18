@@ -22,7 +22,8 @@
     "leawind.MinecraftSchedulingIntegrationMixin",
     "leawind.ThirdPersonPerspectiveMixin",
     "minecraft.KeyMappingMixin",
-    "minecraft.KeyboardHandlerMixin"
+    "minecraft.KeyboardHandlerMixin",
+    "minecraft.PostChainMixin"
   ],
   "injectors": {
     "defaultRequire": 1
